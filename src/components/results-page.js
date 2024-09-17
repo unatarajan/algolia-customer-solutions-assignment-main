@@ -9,7 +9,7 @@ import {
 } from 'instantsearch.js/es/widgets';
 import aa from 'search-insights';
 
-import { handleViewClick, handleCartClick } from '../utils/handlers';
+// import { handleViewClick, handleCartClick } from '../utils/handlers';
 import importJsonToIndex from '../utils/import';
 import configureRelevance from '../utils/relevance';
 import 'dotenv/config';
@@ -25,6 +25,22 @@ aa('init', {
 });
 
 window.aa = aa;
+
+// might be valuable to track how many times this category facet (20% off on a sale) was clicked
+aa('clickedFilters', {
+  userToken: aa('getUserToken'),
+  index: process.env.ALGOLIA_INDEX,
+  eventName: 'Cameras Category Clicked',
+  filters: ['categories:Cameras%20&%20Camcorders'],
+});
+
+// might be valuable to track if this category facet was selected when a user converted
+aa('convertedFilters', {
+  userToken: aa('getUserToken'),
+  index: process.env.ALGOLIA_INDEX,
+  eventName: 'Cameras Category Converted',
+  filters: ['categories:Cameras%20&%20Camcorders'],
+});
 
 /**
  * @class ResultsPage
@@ -100,6 +116,7 @@ class ResultPage {
                 id="view-item"
                 class="result-hit__view"
                 onClick="${(event) => {
+                  // override default click event
                   event.stopPropagation();
                   sendEvent('click', hit, 'Item View Button Clicked');
                 }}"
@@ -109,8 +126,8 @@ class ResultPage {
               <button
                 id="add-to-cart"
                 class="result-hit__cart"
-                onClick="${(event) => {
-                  event.stopPropagation();
+                onClick="${() => {
+                  // no default conversion event
                   sendEvent('conversion', hit, 'Item Added To Cart');
                 }}"
               >
@@ -130,6 +147,25 @@ class ResultPage {
       refinementList({
         container: '#categories-facet',
         attribute: 'categories',
+        // templates: {
+        //   item: (facet, { html }) => html`<a
+        //     class="category-facet"
+        //     onClick="${() => {
+        //       // Check if the clicked facet is 'Cameras & Camcorders'
+        //       if (facet.label === 'Cameras & Camcorders' && facet.isRefined) {
+        //         aa('clickedFilters', {
+        //           userToken: aa('getUserToken'),
+        //           index: process.env.ALGOLIA_INDEX,
+        //           eventName: 'Cameras Category Clicked',
+        //           filters: ['categories:Cameras%20&%20Camcorders'],
+        //         });
+        //       }
+        //       return facet;
+        //     }}"
+        //   >
+        //     ${facet.label}
+        //   </a>`,
+        // },
       }),
     ]);
   }
@@ -141,22 +177,6 @@ class ResultPage {
    */
   _startSearch() {
     this._searchInstance.start();
-
-    // might be valuable to track how many times this category facet (20% off on a sale) was clicked
-    aa('clickedFilters', {
-      userToken: aa('getUserToken'),
-      index: process.env.ALGOLIA_INDEX,
-      eventName: 'Cameras Category Clicked',
-      filters: ['categories:Cameras%20&%20Camcorders'],
-    });
-
-    // might be valuable to track if this category facet was selected when a user converted
-    aa('convertedFilters', {
-      userToken: aa('getUserToken'),
-      index: process.env.ALGOLIA_INDEX,
-      eventName: 'Cameras Category Converted',
-      filters: ['categories:Cameras%20&%20Camcorders'],
-    });
   }
 }
 
